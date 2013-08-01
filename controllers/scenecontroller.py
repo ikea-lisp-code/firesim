@@ -248,6 +248,7 @@ class SceneController:
             # TODO: Need to validate addressing in the GUI.  See #10
             if cmd == 0x10 or cmd == 0x20:
                 self.set_strand(strand, data)
+                
 
 
             if len(packet) > (4 + datalen):
