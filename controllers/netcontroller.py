@@ -1,6 +1,8 @@
 import time
 import logging as log
 
+from profilehooks import profile
+
 from PySide import QtCore, QtNetwork
 
 
@@ -24,6 +26,7 @@ class NetController(QtCore.QObject):
         log.info("Listening on UDP 3020")
 
     @QtCore.Slot()
+    @profile
     def read_datagrams(self):
         while self.socket.hasPendingDatagrams():
             datagram = QtCore.QByteArray()
