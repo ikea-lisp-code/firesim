@@ -2,6 +2,7 @@ import logging as log
 import struct
 import array
 import numpy as np
+from collections import defaultdict
 
 from ui.canvaswidget import CanvasWidget
 from ui.fixturewidget import FixtureWidget
@@ -19,6 +20,7 @@ class SceneController:
         self.scene = scene
         self.app = app
         self.fixtures = []
+        self._fixtures_by_strand = defaultdict(lambda: [])
         self._num_packets = 0
         self._max_fixtures = 0
         self._max_pixels = 0
@@ -37,7 +39,16 @@ class SceneController:
         self.fixtures = []
         fixture_data = self.scene.get("fixtures", [])
         for fixture_data_item in fixture_data:
-            self.fixtures.append(Fixture(fixture_data_item, controller=self))
+            fixture = Fixture(fixture_data_item, controller=self)
+            self.fixtures.append(fixture)
+            self._fixtures_by_strand[fixture.strand()].append(fixture)
+
+        # Sort fixtures by address.
+        self.fixtures = sorted(self.fixtures, key=lambda f: f.address())
+        for strand in self._fixtures_by_strand:
+            self._fixtures_by_strand[strand] = sorted(self._fixtures_by_strand[strand],
+                                                      key=lambda f: f.address())
+
         self.update_canvas()
 
     def load_backdrop(self):
@@ -181,18 +192,23 @@ class SceneController:
 
     def set_strand(self, strand, pixels, bgr=False):
         start = 0
-        strand_fixtures = [f for f in self.fixtures if (f.strand() == strand or strand == -1)]
-        for f in sorted(strand_fixtures, key=lambda f: f.address()):
-            if (strand == -1 or f.strand() == strand):
-                nd = 3 * f.pixels()
-                if self._color_mode == "HLSF32":
-                    nd *= 4
-                if len(pixels) >= (start + nd):
-                    fixture_pixels = pixels[start:start + nd]
-                    if self._color_mode == "HLSF32":
-                        fixture_pixels = struct.unpack("%sf" % 3 * f.pixels(), array.array('B', fixture_pixels))
-                    f.set_flat_array(fixture_pixels, bgr=bgr, color_mode=self._color_mode)
-                start += nd
+
+        if strand == -1:
+            strand_fixtures = self.fixtures
+        else:
+            strand_fixtures = self._fixtures_by_strand[strand]
+
+        is_hlsf32 = self._color_mode == "HLSF32"
+        for f in strand_fixtures:
+            nd = 3 * f.pixels()
+            if is_hlsf32:
+                nd *= 4
+            if len(pixels) >= (start + nd):
+                fixture_pixels = pixels[start:start + nd]
+                if is_hlsf32:
+                    fixture_pixels = struct.unpack("%sf" % 3 * f.pixels(), array.array('B', fixture_pixels))
+                f.set_flat_array(fixture_pixels, bgr=bgr, color_mode=self._color_mode)
+            start += nd
 
     def process_command(self, packet):
         if len(packet) < 3:
