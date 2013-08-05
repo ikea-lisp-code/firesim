@@ -1,5 +1,6 @@
 import time
 import logging as log
+import struct
 
 from profilehooks import profile
 
@@ -32,7 +33,7 @@ class NetController(QtCore.QObject):
             datagram = QtCore.QByteArray()
             datagram.resize(self.socket.pendingDatagramSize())
             (datagram, sender, sport) = self.socket.readDatagram(datagram.size())
-            packet = [ord(c) for c in datagram.data()]
+            packet = struct.unpack('B' * datagram.size(), datagram.data())
             self.app.scenecontroller.process_command(packet)
         self.updates += 1
         self.data_received.emit()
