@@ -129,9 +129,9 @@ class FixtureWidget(QtDeclarative.QDeclarativeItem):
             color_line.setLength(color_line.length() / self.model.pixels())
             painter.setPen(QtGui.QPen(QtGui.QColor(0, 0, 0, 0), 0))
 
-            for pixel in self.model._pixel_data:
+            for pixel_offset in xrange(0, len(self.model._pixel_data), 3):
                 px, py = color_line.x1(), color_line.y1()
-                r, g, b = pixel[0], pixel[1], pixel[2]
+                r, g, b = self.model._pixel_data[pixel_offset], self.model._pixel_data[pixel_offset + 1], self.model._pixel_data[pixel_offset + 2]
                 painter.setBrush(QtGui.QColor(r, g, b, 255))
                 painter.setPen(QtGui.QPen(QtGui.QColor(r, g, b, 60),
                                           5,
