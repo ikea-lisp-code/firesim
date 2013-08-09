@@ -97,7 +97,7 @@ class FixtureWidget(QtDeclarative.QDeclarativeItem):
             painter.drawLine(0, 0, width, height)
 
         painter.setBrush(QtGui.QColor(0, 0, 0, 0))
-        painter.setRenderHint(QtGui.QPainter.Antialiasing)
+        #painter.setRenderHint(QtGui.QPainter.Antialiasing)
         painter.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255, 60),
                                   6,
                                   QtCore.Qt.SolidLine,
