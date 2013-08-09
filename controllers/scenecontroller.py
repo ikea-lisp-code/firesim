@@ -179,6 +179,7 @@ class SceneController:
         self._output_buffer = np.zeros((len(self._strand_keys), self._max_fixtures, self._max_pixels, 3))
 
     def net_set(self, strand, address, color):
+        """UNUSED"""
         #start = time.time()
         for f in self.fixtures:
             if (strand == -1 or f.strand() == strand) and (address == -1 or f.address() == address):
