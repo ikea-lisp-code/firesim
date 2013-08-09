@@ -1,7 +1,7 @@
 import logging as log
 import os.path
 
-from PySide import QtCore, QtGui, QtDeclarative, QtDeclarative
+from PySide import QtCore, QtGui, QtDeclarative, QtDeclarative, QtOpenGL
 
 from ui.canvaswidget import CanvasWidget
 from ui.fixturewidget import FixtureWidget
@@ -33,7 +33,10 @@ class FireSimGUI(QtCore.QObject):
         QtDeclarative.qmlRegisterType(FixtureWidget, "FireSim", 1, 0, "Fixture")
 
         self.view = QtDeclarative.QDeclarativeView()
-
+        format = QtOpenGL.QGLFormat(QtOpenGL.QGL.DirectRendering)
+        glwidget = QtOpenGL.QGLWidget(format)
+        glwidget.setAutoFillBackground(False)
+        self.view.setViewport(glwidget)
         self.view.setWindowTitle("FireSim")
         self.view.setResizeMode(QtDeclarative.QDeclarativeView.SizeRootObjectToView)
 
