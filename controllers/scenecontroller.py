@@ -127,9 +127,9 @@ class SceneController:
         return self.fixtures
 
     def update_all(self):
-        for f in self.fixtures:
-            f.get_widget().update()
-        self.center_widget.update()
+        # for f in self.fixtures:
+        #      f.get_widget().update()
+        #self.center_widget.update()
         self.canvas.update()
 
     def toggle_background_enable(self):
