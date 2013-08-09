@@ -97,7 +97,7 @@ class FixtureWidget(QtDeclarative.QDeclarativeItem):
             painter.drawLine(0, 0, width, height)
 
         painter.setBrush(QtGui.QColor(0, 0, 0, 0))
-        painter.setRenderHint(QtGui.QPainter.Antialiasing)
+        #painter.setRenderHint(QtGui.QPainter.Antialiasing)
         painter.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255, 60),
                                   6,
                                   QtCore.Qt.SolidLine,
@@ -129,14 +129,17 @@ class FixtureWidget(QtDeclarative.QDeclarativeItem):
             color_line.setLength(color_line.length() / self.model.pixels())
             painter.setPen(QtGui.QPen(QtGui.QColor(0, 0, 0, 0), 0))
 
+            pen = QtGui.QPen(QtGui.QColor(255, 255, 255, 255),
+                             5,
+                             QtCore.Qt.SolidLine)
             for pixel_offset in xrange(0, len(self.model._pixel_data), 3):
                 px, py = color_line.x1(), color_line.y1()
                 r, g, b = self.model._pixel_data[pixel_offset], self.model._pixel_data[pixel_offset + 1], self.model._pixel_data[pixel_offset + 2]
-                painter.setBrush(QtGui.QColor(r, g, b, 255))
-                painter.setPen(QtGui.QPen(QtGui.QColor(r, g, b, 60),
-                                          5,
-                                          QtCore.Qt.SolidLine))
-                painter.drawEllipse(QtCore.QPointF(px, py), 1.5, 1.5)
+                pen.setColor(QtGui.QColor(r, g, b, 255))
+                painter.setPen(pen)
+                #painter.setBrush(QtGui.QColor(r, g, b, 255))
+                painter.drawPoint(px, py)
+                #painter.drawEllipse(QtCore.QPointF(px, py), 1.5, 1.5)
                 #painter.drawLine(color_line.unitVector())
                 color_line.translate(color_line.dx(), color_line.dy())
 

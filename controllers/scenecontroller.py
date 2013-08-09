@@ -127,9 +127,9 @@ class SceneController:
         return self.fixtures
 
     def update_all(self):
-        for f in self.fixtures:
-            f.get_widget().update()
-        self.center_widget.update()
+        # for f in self.fixtures:
+        #      f.get_widget().update()
+        #self.center_widget.update()
         self.canvas.update()
 
     def toggle_background_enable(self):
@@ -179,6 +179,7 @@ class SceneController:
         self._output_buffer = np.zeros((len(self._strand_keys), self._max_fixtures, self._max_pixels, 3))
 
     def net_set(self, strand, address, color):
+        """UNUSED"""
         #start = time.time()
         for f in self.fixtures:
             if (strand == -1 or f.strand() == strand) and (address == -1 or f.address() == address):
