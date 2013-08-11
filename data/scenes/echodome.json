@@ -13,6 +13,34 @@
     1000, 
     1000
   ], 
+  ],
+  "audio_emitters": [
+    {
+      "type": "deck",
+      "group": "[Channel1]",
+      "pos": [ 400, 100 ]
+    },
+    {
+      "type": "deck",
+      "group": "[Channel2]",
+      "pos": [ 300, 100 ]
+    },
+    {
+      "type": "deck",
+      "group": "[Channel3]",
+      "pos": [ 200, 100 ]
+    },
+    {
+      "type": "deck",
+      "group": "[Channel4]",
+      "pos": [ 100, 100 ]
+    },
+    {
+      "type": "listener",
+      "group": "[AudioScene]",
+      "pos": [ 500, 100 ]
+    }
+  ],
 
   "fixtures": [
 {

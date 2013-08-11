@@ -6,12 +6,14 @@ from collections import defaultdict
 
 from ui.canvaswidget import CanvasWidget
 from ui.fixturewidget import FixtureWidget
+from ui.audioemitterwidget import AudioEmitterWidget
 from ui.crosshairwidget import CrosshairWidget
 
 from PySide import QtGui
 
 
 from models.fixture import Fixture
+from models.audioemitter import AudioEmitter
 
 class SceneController:
 
@@ -19,6 +21,7 @@ class SceneController:
         self.canvas = canvas
         self.scene = scene
         self.app = app
+        self.audio_emitters = []
         self.fixtures = []
         self._fixtures_by_strand = defaultdict(lambda: [])
         self._num_packets = 0
@@ -36,6 +39,13 @@ class SceneController:
     def init_view(self):
         self.center_widget = CrosshairWidget(self.canvas, self.scene.center(), "Center", callback=self.on_center_moved)
         self.load_backdrop()
+
+        self.audio_emitters = []
+        audio_emitter_data = self.scene.get('audio_emitters', [])
+        for audio_emitter_item in audio_emitter_data:
+            audio_emitter = AudioEmitter(audio_emitter_item, controller=self)
+            self.audio_emitters.append(audio_emitter)
+
         self.fixtures = []
         fixture_data = self.scene.get("fixtures", [])
         for fixture_data_item in fixture_data:
@@ -70,6 +80,8 @@ class SceneController:
 
     def update_canvas(self):
         if self.canvas is not None:
+            ael = [ae.get_widget() for ae in self.audio_emitters]
+            self.canvas.update_audio_emitters(ael)
             fl = [f.get_widget() for f in self.fixtures]
             self.canvas.update_fixtures(fl)
 

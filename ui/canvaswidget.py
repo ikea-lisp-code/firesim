@@ -50,6 +50,12 @@ class CanvasWidget(QtDeclarative.QDeclarativeItem):
             fixture.update()
         self.update()
 
+    def update_audio_emitters(self, audio_emitter_list):
+        self.audio_emitter_list = audio_emitter_list
+        for audio_emitter in audio_emitter_list:
+            audio_emitter.update()
+        self.update()
+
     def set_background_image(self, image):
         if image is not None:
             assert isinstance(image, QtGui.QImage), "You must pass a QtGui.QImage to set_background_image()"
