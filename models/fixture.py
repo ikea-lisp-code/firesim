@@ -25,7 +25,7 @@ class Fixture:
         self._widget = None
         self._controller = controller
 
-        self._pixel_data = [(0, 0, 0)] * self._pixels
+        self._pixel_data = (0, 0, 0) * self._pixels
 
     def __repr__(self):
         return "[%d:%d]*%d" % (self._strand, self._address, self._pixels)
@@ -99,41 +99,43 @@ class Fixture:
 
     def blackout(self):
         self._pixel_data = [(0, 0, 0)] * self._pixels
-        self._widget.update()
 
     def set(self, pixel, color):
         assert isinstance(color, tuple), "Color must be a 3-tuple (R, G, B)"
-        self._pixel_data[pixel] = color
-        self._widget.update()
+        pixel_index = pixel * 3
+        self._pixel_data[pixel_index:pixels_index + 3] = color
 
     def set_all(self, color):
         assert isinstance(color, tuple), "Color must be a 3-tuple (R, G, B)"
-        self._pixel_data = [color] * self._pixels
-        self._widget.update()
+        self._pixel_data = list(color) * self._pixels
 
     def set_array(self, color_array):
         if len(color_array) != self.pixels():
             raise ValueError("set_array argument length must match fixture pixel count")
         self._pixel_data = color_array
-        self._widget.update()
 
     def set_flat_array(self, color_array, bgr=False, color_mode="RGB8"):
         if len(color_array) != 3 * self.pixels():
             print len(color_array)
             raise ValueError("set_flat_array argument length must match fixture pixel count")
-        for i, _ in enumerate(self._pixel_data):
-            if color_mode == "HLSF32":
-                hls = color_array[i * 3], color_array[i * 3 + 1], color_array[i * 3 + 2]
-                rgb = colorsys.hls_to_rgb(*hls)
-                red, green, blue = tuple([int(clip(0.0, 255.0 * channel, 255.0)) for channel in rgb])
-            else:
-                red, green, blue = color_array[i * 3], color_array[i * 3 + 1], color_array[i * 3 + 2]
+        is_hlsf32 = color_mode == "HLSF32"
 
-            if bgr:
-                self._pixel_data[i] = (blue, green, red)
-            else:
-                self._pixel_data[i] = (red, green, blue)
-        self._widget.update()
+        # Common case
+        if color_mode == 'RGB8':
+            self._pixel_data = color_array
+        else:
+            for i, base_offset in enumerate(xrange(0, len(self._pixel_data)*3, 3)):
+                if is_hlsf32:
+                    hls = color_array[base_offset], color_array[base_offset + 1], color_array[base_offset + 2]
+                    rgb = colorsys.hls_to_rgb(*hls)
+                    red, green, blue = tuple([int(clip(0.0, 255.0 * channel, 255.0)) for channel in rgb])
+                else:
+                    red, green, blue = color_array[base_offset], color_array[base_offset + 1], color_array[base_offset + 2]
+
+                if bgr:
+                    self._pixel_data[i] = (blue, green, red)
+                else:
+                    self._pixel_data[i] = (red, green, blue)
 
     def random_color(self):
         r, g, b = [int(255.0 * c) for c in colorsys.hsv_to_rgb(random.random(), 1.0, 1.0)]

@@ -2,15 +2,18 @@ import logging as log
 import struct
 import array
 import numpy as np
+from collections import defaultdict
 
 from ui.canvaswidget import CanvasWidget
 from ui.fixturewidget import FixtureWidget
+from ui.audioemitterwidget import AudioEmitterWidget
 from ui.crosshairwidget import CrosshairWidget
 
 from PySide import QtGui
 
 
 from models.fixture import Fixture
+from models.audioemitter import AudioEmitter
 
 class SceneController:
 
@@ -18,7 +21,9 @@ class SceneController:
         self.canvas = canvas
         self.scene = scene
         self.app = app
+        self.audio_emitters = []
         self.fixtures = []
+        self._fixtures_by_strand = defaultdict(lambda: [])
         self._num_packets = 0
         self._max_fixtures = 0
         self._max_pixels = 0
@@ -34,10 +39,26 @@ class SceneController:
     def init_view(self):
         self.center_widget = CrosshairWidget(self.canvas, self.scene.center(), "Center", callback=self.on_center_moved)
         self.load_backdrop()
+
+        self.audio_emitters = []
+        audio_emitter_data = self.scene.get('audio_emitters', [])
+        for audio_emitter_item in audio_emitter_data:
+            audio_emitter = AudioEmitter(audio_emitter_item, controller=self)
+            self.audio_emitters.append(audio_emitter)
+
         self.fixtures = []
         fixture_data = self.scene.get("fixtures", [])
         for fixture_data_item in fixture_data:
-            self.fixtures.append(Fixture(fixture_data_item, controller=self))
+            fixture = Fixture(fixture_data_item, controller=self)
+            self.fixtures.append(fixture)
+            self._fixtures_by_strand[fixture.strand()].append(fixture)
+
+        # Sort fixtures by address.
+        self.fixtures = sorted(self.fixtures, key=lambda f: f.address())
+        for strand in self._fixtures_by_strand:
+            self._fixtures_by_strand[strand] = sorted(self._fixtures_by_strand[strand],
+                                                      key=lambda f: f.address())
+
         self.update_canvas()
 
     def load_backdrop(self):
@@ -59,6 +80,8 @@ class SceneController:
 
     def update_canvas(self):
         if self.canvas is not None:
+            ael = [ae.get_widget() for ae in self.audio_emitters]
+            self.canvas.update_audio_emitters(ael)
             fl = [f.get_widget() for f in self.fixtures]
             self.canvas.update_fixtures(fl)
 
@@ -116,9 +139,9 @@ class SceneController:
         return self.fixtures
 
     def update_all(self):
-        for f in self.fixtures:
-            f.get_widget().update()
-        self.center_widget.update()
+        # for f in self.fixtures:
+        #      f.get_widget().update()
+        #self.center_widget.update()
         self.canvas.update()
 
     def toggle_background_enable(self):
@@ -168,6 +191,7 @@ class SceneController:
         self._output_buffer = np.zeros((len(self._strand_keys), self._max_fixtures, self._max_pixels, 3))
 
     def net_set(self, strand, address, color):
+        """UNUSED"""
         #start = time.time()
         for f in self.fixtures:
             if (strand == -1 or f.strand() == strand) and (address == -1 or f.address() == address):
@@ -181,18 +205,23 @@ class SceneController:
 
     def set_strand(self, strand, pixels, bgr=False):
         start = 0
-        strand_fixtures = [f for f in self.fixtures if (f.strand() == strand or strand == -1)]
-        for f in sorted(strand_fixtures, key=lambda f: f.address()):
-            if (strand == -1 or f.strand() == strand):
-                nd = 3 * f.pixels()
-                if self._color_mode == "HLSF32":
-                    nd *= 4
-                if len(pixels) >= (start + nd):
-                    fixture_pixels = pixels[start:start + nd]
-                    if self._color_mode == "HLSF32":
-                        fixture_pixels = struct.unpack("%sf" % 3 * f.pixels(), array.array('B', fixture_pixels))
-                    f.set_flat_array(fixture_pixels, bgr=bgr, color_mode=self._color_mode)
-                start += nd
+
+        if strand == -1:
+            strand_fixtures = self.fixtures
+        else:
+            strand_fixtures = self._fixtures_by_strand[strand]
+
+        is_hlsf32 = self._color_mode == "HLSF32"
+        for f in strand_fixtures:
+            nd = 3 * f.pixels()
+            if is_hlsf32:
+                nd *= 4
+            if len(pixels) >= (start + nd):
+                fixture_pixels = pixels[start:start + nd]
+                if is_hlsf32:
+                    fixture_pixels = struct.unpack("%sf" % 3 * f.pixels(), array.array('B', fixture_pixels))
+                f.set_flat_array(fixture_pixels, bgr=bgr, color_mode=self._color_mode)
+            start += nd
 
     def process_command(self, packet):
         if len(packet) < 3:
@@ -248,6 +277,7 @@ class SceneController:
             # TODO: Need to validate addressing in the GUI.  See #10
             if cmd == 0x10 or cmd == 0x20:
                 self.set_strand(strand, data)
+                
 
 
             if len(packet) > (4 + datalen):

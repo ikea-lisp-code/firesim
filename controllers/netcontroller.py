@@ -1,5 +1,8 @@
 import time
 import logging as log
+import struct
+
+from profilehooks import profile
 
 from PySide import QtCore, QtNetwork
 
@@ -16,6 +19,7 @@ class NetController(QtCore.QObject):
         self.updates = 0
         self.last_time = time.clock()
         self.init_socket()
+        self._byte_array_cache = {}
 
     def init_socket(self):
         self.socket = QtNetwork.QUdpSocket(self)
@@ -24,14 +28,22 @@ class NetController(QtCore.QObject):
         log.info("Listening on UDP 3020")
 
     @QtCore.Slot()
+    @profile
     def read_datagrams(self):
         while self.socket.hasPendingDatagrams():
-            datagram = QtCore.QByteArray()
-            datagram.resize(self.socket.pendingDatagramSize())
-            (datagram, sender, sport) = self.socket.readDatagram(datagram.size())
-            packet = [ord(c) for c in datagram.data()]
-            self.app.scenecontroller.process_command(packet)
-            self.updates += 1
+            datagram_size = self.socket.pendingDatagramSize()
+
+            datagram = self._byte_array_cache.get(datagram_size, None)
+            if datagram is None:
+                datagram = QtCore.QByteArray()
+                datagram.resize(datagram_size)
+                self._byte_array_cache[datagram_size] = datagram
+
+            (datagram, sender, sport) = self.socket.readDatagram(datagram_size)
+
+            buffer = struct.unpack('B' * datagram_size, datagram.data())
+            self.app.scenecontroller.process_command(buffer)
+        self.updates += 1
         self.data_received.emit()
 
     #@QtCore.Slot(result=float)
