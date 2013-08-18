@@ -1,15 +1,45 @@
 {
-    "backdrop_enable": true, 
-    "backdrop_filename": "light_dome.png", 
-    "center": [
-        500, 
-        500
-    ], 
-    "extents": [
-        1000, 
-        1000
-    ], 
-    "file-type": "scene", 
+  "backdrop_enable": false, 
+  "backdrop_filename": "light_dome.png", 
+  "bounding_box": [
+    1000, 
+    1000
+  ], 
+  "center": [
+    500, 
+    500
+  ], 
+  "extents": [
+    1000, 
+    1000
+  ],
+  "audio_emitters": [
+    {
+      "type": "deck",
+      "group": "[Channel1]",
+      "pos": [ 400, 100 ]
+    },
+    {
+      "type": "deck",
+      "group": "[Channel2]",
+      "pos": [ 300, 100 ]
+    },
+    {
+      "type": "deck",
+      "group": "[Channel3]",
+      "pos": [ 200, 100 ]
+    },
+    {
+      "type": "deck",
+      "group": "[Channel4]",
+      "pos": [ 100, 100 ]
+    },
+    {
+      "type": "listener",
+      "group": "[AudioScene]",
+      "pos": [ 500, 100 ]
+    }
+  ],
   "fixtures": [
 {
       "address": 0, 
